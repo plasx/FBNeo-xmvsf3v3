@@ -1,4 +1,5 @@
 #include "cps.h"
+#include "xmvsf_portrait_palette.h"
 // CPS Objs (sprites)
 
 INT32 nCpsObjectBank;
@@ -122,10 +123,13 @@ INT32 CpsObjInit()
 		return 1;
 	}
 
+	// Initialize complete buffers serialized only by the XMV6 profile.
+	if (CpsXmvSixActive()) memset(ObjMem, 0, (nMax << 3) * nFrameCount);
 	// Set up the frame buffers
 	for (INT32 i = 0; i < nFrameCount; i++) {
 		of[i].Obj = ObjMem + (nMax << 3) * i;
 		of[i].nCount = 0;
+        if (CpsXmvSixActive()) of[i].nShiftX = of[i].nShiftY = 0;
 	}
 
 	nGetNext=0;
@@ -435,6 +439,27 @@ INT32 Cps2ObjDraw(INT32 nLevelFrom, INT32 nLevelTo)
 		
 		// Find the palette for the tiles on this sprite
 		CpstPal = CpsPal + ((a & 0x1F) << 4);
+        // portrait1: only the allocated 2x1 mini-HUD objects use this path.
+        // The buffered OBJ carries character (tile) and costume (attribute),
+        // avoiding a current-roster lookup against a one-frame-old sprite.
+        UINT32* portraitNativePalette = CpstPal;
+        UINT32 portraitPalette[16];
+        unsigned portraitColor = 0;
+        if (CpsXmvSixActive() && XmvPortraitObject2(n,
+                BURN_ENDIAN_SWAP_INT16(ps[0]), BURN_ENDIAN_SWAP_INT16(ps[1]), a,
+                XmvWideActive() != 0, &portraitColor)) {
+            UINT16 colors[16];
+            // portrait2: colour 0..5 from the buffered OBJ marker.
+            if (!XmvPortraitColors2(true, CpsRom, nCpsRomLen, n, portraitColor, colors))
+                continue; // changed/invalid DATA directory or variant table
+            for (unsigned pen = 0; pen < 16; ++pen) {
+                unsigned color = colors[pen];
+                portraitPalette[pen] = BurnHighCol(((color >> 8) & 15) * 17,
+                    ((color >> 4) & 15) * 17, (color & 15) * 17, 0);
+            }
+            CpstPal = portraitPalette;
+        }
+
 
 		nFlip = (a >> 5) & 3;
 		// Find out sprite size
@@ -489,6 +514,8 @@ INT32 Cps2ObjDraw(INT32 nLevelFrom, INT32 nLevelTo)
 				nCpsBlend = 0;
 			}
 		}
+        // No global pointer may outlive the local per-object colors.
+        CpstPal = portraitNativePalette;
 	}
 
 	return 0;
@@ -882,4 +909,28 @@ INT32 FcrashObjDraw(INT32 nLevelFrom,INT32 nLevelTo)
 	}
 	
 	return 0;
+}
+
+// Host Obj pointers are reconstructed by CpsObjInit, never serialized.
+INT32 CpsObjVisualScan(INT32 action)
+{
+    if (!CpsXmvSixActive() || !(action & ACB_DRIVER_DATA)) return 0;
+    BurnArea ba = {};
+    ba.Data = ObjMem; ba.nLen = (nMax << 3) * nFrameCount;
+    ba.szName = "XmvSpriteLagBuffers"; BurnAcb(&ba);
+    SCAN_VAR(nGetNext);
+    SCAN_VAR(nMaxZValue);
+    SCAN_VAR(nMaxZMask);
+    SCAN_VAR(nZOffset);
+    for (INT32 i = 0; i < nFrameCount; i++) {
+        SCAN_VAR(of[i].nShiftX);
+        SCAN_VAR(of[i].nShiftY);
+        SCAN_VAR(of[i].nCount);
+    }
+    if (action & ACB_WRITE) {
+        if (nGetNext < 0 || nGetNext >= nFrameCount) return 1;
+        for (INT32 i = 0; i < nFrameCount; i++)
+            if (of[i].nCount < 0 || of[i].nCount > nMax) return 1;
+    }
+    return 0;
 }

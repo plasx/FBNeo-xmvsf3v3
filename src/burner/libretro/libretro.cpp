@@ -38,7 +38,8 @@
 
 #ifdef SUBSET
 #undef APP_TITLE
-#define APP_TITLE "FinalBurn Neo (" SUBSET " subset)"
+#define APP_TITLE "FinalBurn Neo (XMvsSF 3v3 + DHC)"
+extern void XmvWideRequest(INT32);
 #endif
 
 int counter;           // General purpose variable used when debugging
@@ -2161,6 +2162,14 @@ static bool retro_load_game_common()
 
 		// Libretro doesn't want the refresh rate to be limited to 60hz
 		bSpeedLimit60hz = false;
+
+        // Reload-only geometry: allocate every CPS/video buffer with the final size.
+        // In-game variable updates never change XmvWideRequested or live geometry.
+        struct retro_variable xmvWide = { "fbneo-xmvsf-expanded-view", NULL };
+        bool xmvWideEnabled = !strcmp(g_driver_name, "xmvsf6pd") &&
+            environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &xmvWide) &&
+            xmvWide.value && !strcmp(xmvWide.value, "enabled");
+        XmvWideRequest(xmvWideEnabled ? 1 : 0);
 
 		// Initialize game driver
 		if(BurnDrvInit() == 0)

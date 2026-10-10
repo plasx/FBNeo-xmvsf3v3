@@ -78,6 +78,7 @@ static void check_aspect()
 
 static INT32 DrvReset()
 {
+	CpsXmvSixReset();
 	// Reset machine
 	if (Cps == 2 || PangEEP || Cps1Qs == 1 || CpsBootlegEEPROM) EEPROMReset();
 

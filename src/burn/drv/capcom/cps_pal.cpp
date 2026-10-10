@@ -3,6 +3,7 @@
 
 // CPS (palette)
 
+static bool CpsXmvPaletteRestored = false;
 static UINT8* CpsPalSrc = NULL;			// Copy of current input palette
 UINT32* CpsPal = NULL;					// Hicolor version of palette
 INT32 nCpsPalCtrlReg;
@@ -24,6 +25,8 @@ INT32 CpsPalInit()
 	if (CpsPal == NULL) {
 		return 1;
 	}
+    if (CpsXmvSixActive()) memset(CpsPal, 0, nLen);
+    CpsXmvPaletteRestored = false;
 
 	return 0;
 }
@@ -70,4 +73,26 @@ INT32 CpsPalUpdate(UINT8* pNewPal)
 	}
 
 	return 0;
+}
+
+// Effective colors retain disabled pages between DMA writes. Rereading current
+// graphics RAM after restore does not reconstruct that latched palette.
+// Pixel format is fixed in the pinned core/session; cross-profile saves are not
+// supported. No host pointer enters this format.
+INT32 CpsPalVisualScan(INT32 action)
+{
+    if (!CpsXmvSixActive() || !(action & ACB_DRIVER_DATA)) return 0;
+    BurnArea ba = {};
+    ba.Data = CpsPalSrc; ba.nLen = 0xc00 * sizeof(UINT16);
+    ba.szName = "XmvPaletteDmaInput"; BurnAcb(&ba);
+    ba.Data = CpsPal; ba.nLen = 0xc00 * sizeof(UINT32);
+    ba.szName = "XmvEffectivePalette"; BurnAcb(&ba);
+    if (action & ACB_WRITE) CpsXmvPaletteRestored = true;
+    return 0;
+}
+INT32 CpsPalConsumeRestoredCache()
+{
+    if (!CpsXmvSixActive() || !CpsXmvPaletteRestored) return 0;
+    CpsXmvPaletteRestored = false;
+    return 1;
 }

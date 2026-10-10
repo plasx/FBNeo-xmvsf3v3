@@ -12763,6 +12763,116 @@ struct BurnDriver BurnDrvCpsXmvsf = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
+// XMV6 diagnostic virtual board
+static struct BurnInputInfo XmvSixInputList[] = {
+    {"P1 Right", BIT_DIGITAL, CpsXmvSixButtons[0]+0, "p1 right"},
+    {"P1 Left", BIT_DIGITAL, CpsXmvSixButtons[0]+1, "p1 left"},
+    {"P1 Down", BIT_DIGITAL, CpsXmvSixButtons[0]+2, "p1 down"},
+    {"P1 Up", BIT_DIGITAL, CpsXmvSixButtons[0]+3, "p1 up"},
+    {"P1 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[0]+4, "p1 fire 1"},
+    {"P1 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[0]+5, "p1 fire 2"},
+    {"P1 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[0]+6, "p1 fire 3"},
+    {"P1 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[0]+8, "p1 fire 4"},
+    {"P1 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[0]+9, "p1 fire 5"},
+    {"P1 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[0]+10, "p1 fire 6"},
+    {"P1 Start", BIT_DIGITAL, CpsXmvSixButtons[0]+11, "p1 start"},
+    {"P1 Coin", BIT_DIGITAL, CpsXmvSixButtons[0]+12, "p1 coin"},
+    {"P2 Right", BIT_DIGITAL, CpsXmvSixButtons[1]+0, "p2 right"},
+    {"P2 Left", BIT_DIGITAL, CpsXmvSixButtons[1]+1, "p2 left"},
+    {"P2 Down", BIT_DIGITAL, CpsXmvSixButtons[1]+2, "p2 down"},
+    {"P2 Up", BIT_DIGITAL, CpsXmvSixButtons[1]+3, "p2 up"},
+    {"P2 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[1]+4, "p2 fire 1"},
+    {"P2 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[1]+5, "p2 fire 2"},
+    {"P2 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[1]+6, "p2 fire 3"},
+    {"P2 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[1]+8, "p2 fire 4"},
+    {"P2 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[1]+9, "p2 fire 5"},
+    {"P2 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[1]+10, "p2 fire 6"},
+    {"P2 Start", BIT_DIGITAL, CpsXmvSixButtons[1]+11, "p2 start"},
+    {"P2 Coin", BIT_DIGITAL, CpsXmvSixButtons[1]+12, "p2 coin"},
+    {"P3 Right", BIT_DIGITAL, CpsXmvSixButtons[2]+0, "p3 right"},
+    {"P3 Left", BIT_DIGITAL, CpsXmvSixButtons[2]+1, "p3 left"},
+    {"P3 Down", BIT_DIGITAL, CpsXmvSixButtons[2]+2, "p3 down"},
+    {"P3 Up", BIT_DIGITAL, CpsXmvSixButtons[2]+3, "p3 up"},
+    {"P3 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[2]+4, "p3 fire 1"},
+    {"P3 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[2]+5, "p3 fire 2"},
+    {"P3 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[2]+6, "p3 fire 3"},
+    {"P3 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[2]+8, "p3 fire 4"},
+    {"P3 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[2]+9, "p3 fire 5"},
+    {"P3 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[2]+10, "p3 fire 6"},
+    {"P3 Start", BIT_DIGITAL, CpsXmvSixButtons[2]+11, "p3 start"},
+    {"P3 Coin", BIT_DIGITAL, CpsXmvSixButtons[2]+12, "p3 coin"},
+    {"P4 Right", BIT_DIGITAL, CpsXmvSixButtons[3]+0, "p4 right"},
+    {"P4 Left", BIT_DIGITAL, CpsXmvSixButtons[3]+1, "p4 left"},
+    {"P4 Down", BIT_DIGITAL, CpsXmvSixButtons[3]+2, "p4 down"},
+    {"P4 Up", BIT_DIGITAL, CpsXmvSixButtons[3]+3, "p4 up"},
+    {"P4 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[3]+4, "p4 fire 1"},
+    {"P4 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[3]+5, "p4 fire 2"},
+    {"P4 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[3]+6, "p4 fire 3"},
+    {"P4 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[3]+8, "p4 fire 4"},
+    {"P4 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[3]+9, "p4 fire 5"},
+    {"P4 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[3]+10, "p4 fire 6"},
+    {"P4 Start", BIT_DIGITAL, CpsXmvSixButtons[3]+11, "p4 start"},
+    {"P4 Coin", BIT_DIGITAL, CpsXmvSixButtons[3]+12, "p4 coin"},
+    {"P5 Right", BIT_DIGITAL, CpsXmvSixButtons[4]+0, "p5 right"},
+    {"P5 Left", BIT_DIGITAL, CpsXmvSixButtons[4]+1, "p5 left"},
+    {"P5 Down", BIT_DIGITAL, CpsXmvSixButtons[4]+2, "p5 down"},
+    {"P5 Up", BIT_DIGITAL, CpsXmvSixButtons[4]+3, "p5 up"},
+    {"P5 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[4]+4, "p5 fire 1"},
+    {"P5 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[4]+5, "p5 fire 2"},
+    {"P5 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[4]+6, "p5 fire 3"},
+    {"P5 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[4]+8, "p5 fire 4"},
+    {"P5 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[4]+9, "p5 fire 5"},
+    {"P5 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[4]+10, "p5 fire 6"},
+    {"P5 Start", BIT_DIGITAL, CpsXmvSixButtons[4]+11, "p5 start"},
+    {"P5 Coin", BIT_DIGITAL, CpsXmvSixButtons[4]+12, "p5 coin"},
+    {"P6 Right", BIT_DIGITAL, CpsXmvSixButtons[5]+0, "p6 right"},
+    {"P6 Left", BIT_DIGITAL, CpsXmvSixButtons[5]+1, "p6 left"},
+    {"P6 Down", BIT_DIGITAL, CpsXmvSixButtons[5]+2, "p6 down"},
+    {"P6 Up", BIT_DIGITAL, CpsXmvSixButtons[5]+3, "p6 up"},
+    {"P6 Weak Punch", BIT_DIGITAL, CpsXmvSixButtons[5]+4, "p6 fire 1"},
+    {"P6 Medium Punch", BIT_DIGITAL, CpsXmvSixButtons[5]+5, "p6 fire 2"},
+    {"P6 Strong Punch", BIT_DIGITAL, CpsXmvSixButtons[5]+6, "p6 fire 3"},
+    {"P6 Weak Kick", BIT_DIGITAL, CpsXmvSixButtons[5]+8, "p6 fire 4"},
+    {"P6 Medium Kick", BIT_DIGITAL, CpsXmvSixButtons[5]+9, "p6 fire 5"},
+    {"P6 Strong Kick", BIT_DIGITAL, CpsXmvSixButtons[5]+10, "p6 fire 6"},
+    {"P6 Start", BIT_DIGITAL, CpsXmvSixButtons[5]+11, "p6 start"},
+    {"P6 Coin", BIT_DIGITAL, CpsXmvSixButtons[5]+12, "p6 coin"},
+    {"Reset", BIT_DIGITAL, &CpsReset, "reset"},
+    {"Diagnostic", BIT_DIGITAL, CpsInp021+1, "diag"},
+    {"Service", BIT_DIGITAL, CpsInp021+2, "service"},
+};
+STDINPUTINFO(XmvSix)
+// XMV wide1: requested geometry is sampled only before driver initialization.
+static INT32 XmvWideRequested = 0;
+void XmvWideRequest(INT32 enabled) { XmvWideRequested = enabled ? 1 : 0; }
+INT32 XmvWideActive() { return XmvWideRequested; }
+static INT32 XmvSixInit() {
+    BurnDrvSetVisibleSize(XmvWideRequested ? 512 : 384, 224);
+    BurnDrvSetAspect(XmvWideRequested ? 16 : 4, XmvWideRequested ? 9 : 3);
+    // bit0 work RAM, bit1 portrait1, bit2 portrait2 six colours, bit3 expanded view,
+    // bit4 (expanded view only) 1024-pixel scroll1 map extension.
+    CpsXmvSixSetCapabilities(XmvWideRequested ? 31 : 7);
+    CpsXmvSixEnable(1);
+    INT32 rc = Cps2Init();
+    if (rc) CpsXmvSixEnable(0);
+    return rc;
+}
+static INT32 XmvSixExit() { CpsXmvSixEnable(0); return DrvExit(); }
+static INT32 XmvSixScan(INT32 action, INT32* minimum) {
+    if (CpsXmvSixScan(action)) return 1;
+    if (CpsAreaScan(action, minimum)) return 1;
+    return CpsXmvVisualScan(action);
+}
+struct BurnDriver BurnDrvCpsXmvsf6pd = {
+	"xmvsf6pd", "xmvsf", NULL, NULL, "1996",
+	"X-Men Vs. Street Fighter 3v3 + DHC (Europe 961004 base, 6 ports)\0", NULL, "Capcom", "CPS2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK, 6, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
+	NULL, XmvsfRomInfo, XmvsfRomName, NULL, NULL, NULL, NULL, XmvSixInputInfo, NULL,
+	XmvSixInit, XmvSixExit, Cps2Frame, CpsRedraw, XmvSixScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvCpsXmvsfr1 = {
 	"xmvsfr1", "xmvsf", NULL, NULL, "1996",
 	"X-Men Vs. Street Fighter (Europe 960910)\0", NULL, "Capcom", "CPS2",

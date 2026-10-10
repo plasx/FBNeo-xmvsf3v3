@@ -81,6 +81,8 @@ INT32 Cps2Scr1Draw(UINT8 *Base, INT32 sx, INT32 sy)
 	INT32 nFirstY, nLastY;
 	INT32 nKnowBlank = -1; // The tile we know is blank
 	INT32 nXTile = nCpsScreenWidth>>3; // 8x8 tiles
+	// wide2: XMvsSF expanded view may keep scroll1 columns 64..127 in virtual RAM.
+	const UINT8* pExt = XmvScroll1Extension();
 
 	ix = (sx >> 3) + 1;
 	sx &= 7;
@@ -107,14 +109,15 @@ INT32 Cps2Scr1Draw(UINT8 *Base, INT32 sx, INT32 sy)
 			p = ((fy & 0x20) << 8) | ((fx & 0x3F) << 7) | ((fy & 0x1F) << 2);
 			p &= 0x3FFF;
 			pst = (UINT16 *)(Base + p);
+			const UINT8* pe = (pExt && (fx & 0x40)) ? pExt + p : NULL;
 
-			t = BURN_ENDIAN_SWAP_INT16(pst[0]);
+			t = pe ? ((pe[0] << 8) | pe[1]) : BURN_ENDIAN_SWAP_INT16(pst[0]);
 			t <<= 6;										// Get real tile address
 
 			t += nCpsGfxScroll[1];							// add on offset to scroll tiles
 
 			if (t != nKnowBlank) {							// Draw tile
-				a = BURN_ENDIAN_SWAP_INT16(pst[1]);
+				a = pe ? ((pe[2] << 8) | pe[3]) : BURN_ENDIAN_SWAP_INT16(pst[1]);
 
 				CpstSetPal(0x20 | (a & 0x1F));
 

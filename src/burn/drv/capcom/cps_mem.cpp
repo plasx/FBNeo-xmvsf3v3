@@ -570,3 +570,16 @@ INT32 CpsAreaScan(INT32 nAction, INT32 *pnMin)
 	
 	return 0;
 }
+
+// XMV6-only visual state: latched display buffers, not substitute game RAM.
+INT32 CpsXmvVisualScan(INT32 action)
+{
+    if (!CpsXmvSixActive() || !(action & ACB_DRIVER_DATA)) return 0;
+    BurnArea ba = {};
+    ba.Data = CpsSavePal; ba.nLen = 0x2000; ba.szName = "XmvLatchedPalette"; BurnAcb(&ba);
+    ba.Data = CpsSaveRegData; ba.nLen = 0x100 * (MAX_RASTER + 1); ba.szName = "XmvLatchedRegisters"; BurnAcb(&ba);
+    ba.Data = CpsSaveFrgData; ba.nLen = 0x20; ba.szName = "XmvLatchedFrg"; BurnAcb(&ba);
+    ba.Data = ZBuf; ba.nLen = nCpsScreenWidth * nCpsScreenHeight * 2; ba.szName = "XmvSpriteZBuffer"; BurnAcb(&ba);
+    if (CpsObjVisualScan(action)) return 1;
+    return CpsPalVisualScan(action);
+}

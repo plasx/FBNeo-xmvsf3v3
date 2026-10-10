@@ -563,3 +563,21 @@ extern UINT8 Cps2VolDwn;
 extern UINT8 AspectDIP;
 
 #endif
+
+// XMV6 diagnostic virtual board
+extern UINT8 CpsXmvSixButtons[6][13];
+void CpsXmvSixEnable(INT32);
+void CpsXmvSixReset();
+INT32 CpsXmvSixScan(INT32);
+UINT8* CpsXmvSixMemoryView();
+UINT8* CpsXmvSixRamView();
+INT32 CpsXmvSixActive();
+void CpsXmvSixSetCapabilities(UINT16);
+INT32 XmvWideActive();
+const UINT8* XmvScroll1Extension();
+
+// Isolated XMV6 render-state profile.
+INT32 CpsXmvVisualScan(INT32 action);
+INT32 CpsObjVisualScan(INT32 action);
+INT32 CpsPalVisualScan(INT32 action);
+INT32 CpsPalConsumeRestoredCache();

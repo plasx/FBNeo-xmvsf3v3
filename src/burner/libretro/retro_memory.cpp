@@ -1,5 +1,7 @@
 #include "retro_common.h"
 #include "retro_memory.h"
+extern UINT8* CpsXmvSixMemoryView();
+extern UINT8* CpsXmvSixRamView();
 
 // Cheevos support
 static void* pMainRamData = NULL;
@@ -185,6 +187,22 @@ void CheevosInit()
 	if (bMainRamFound) {
 		HandleMessage(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p, size is %zu\n", pMainRamData, nMainRamSize);
 	}
+
+    if (CpsXmvSixMemoryView()) {
+        struct retro_memory_descriptor* desc = &sMemoryDescriptors[nMemoryCount++];
+        desc->flags = RETRO_MEMDESC_CONST | RETRO_MEMDESC_BIGENDIAN;
+        desc->ptr = CpsXmvSixMemoryView();
+        desc->start = 0x808000;
+        desc->len = 0x400;
+        desc->addrspace = "XMV6";
+        bMemoryMapFound = true;
+        desc = &sMemoryDescriptors[nMemoryCount++];
+        desc->flags = RETRO_MEMDESC_SYSTEM_RAM | RETRO_MEMDESC_BIGENDIAN;
+        desc->ptr = CpsXmvSixRamView();
+        desc->start = 0x810000;
+        desc->len = 0x10000;
+        desc->addrspace = "XMV6RAM";
+    }
 	if (bMemoryMapFound) {
 		struct retro_memory_map sMemoryMap = {};
 		sMemoryMap.descriptors = sMemoryDescriptors;
@@ -323,6 +341,22 @@ static void TweakScanFlags(INT32 &nAction)
 	}
 }
 
+// wide1 state envelope: reject another viewport BEFORE writing any machine state.
+// Width-dependent render1 Z-buffer serialization cannot cross viewport sizes.
+static bool XmvWideStateProfile()
+{
+    return nBurnDrvActive != ~0U && !strcmp(BurnDrvGetTextA(DRV_NAME), "xmvsf6pd");
+}
+static void XmvWideStateHeader(UINT8* out)
+{
+    INT32 width, height;
+    BurnDrvGetVisibleSize(&width, &height);
+    memcpy(out, "XMVPRT03", 8); // preserve viewport envelope, distinct render profile
+    out[8] = width >> 8; out[9] = width;
+    out[10] = height >> 8; out[11] = height;
+    out[12] = nBurnBpp; out[13] = 0; out[14] = 0; out[15] = 0;
+}
+
 size_t retro_serialize_size()
 {
 	if (nBurnDrvActive == ~0U)
@@ -340,7 +374,7 @@ size_t retro_serialize_size()
 	BurnAcb = StateLenAcb;
 	LibretroAreaScan(nAction);
 
-	return nStateLen[nSavestateContext];
+	return nStateLen[nSavestateContext] + (XmvWideStateProfile() ? 16 : 0);
 }
 
 bool retro_serialize(void *data, size_t size)
@@ -361,6 +395,12 @@ bool retro_serialize(void *data, size_t size)
 	// Tweaking from context
 	TweakScanFlags(nAction);
 
+    if (XmvWideStateProfile()) {
+        if (!data || size < 16) return false;
+        XmvWideStateHeader((UINT8*)data);
+        data = (UINT8*)data + 16;
+        size -= 16;
+    }
 	BurnAcb = StateWriteAcb;
 	pStateBuffer = (UINT8*)data;
 	nTempSize = size;
@@ -380,6 +420,13 @@ bool retro_unserialize(const void *data, size_t size)
 	if (nBurnDrvActive == ~0U)
 		return true;
 
+    if (XmvWideStateProfile()) {
+        UINT8 expected[16];
+        XmvWideStateHeader(expected);
+        if (!data || size < 16 || memcmp(data, expected, 16)) return false;
+        data = (const UINT8*)data + 16;
+        size -= 16;
+    }
 	// We want ACB_FULLSCAN | ACB_WRITE for loading states
 	INT32 nAction = ACB_FULLSCAN | ACB_WRITE;
 

@@ -263,6 +263,21 @@ static struct retro_core_option_v2_definition var_fbneo_hiscores = {
 	},
 	"enabled"
 };
+static struct retro_core_option_v2_definition var_xmv_wide = {
+    "fbneo-xmvsf-expanded-view",
+    "XMvsSF 3v3 + DHC wide arena (restart content)",
+    NULL,
+    "512x224 at 16:9 for the XMvsSF 3v3 + DHC expanded-view ROM (built and loaded by the package's WIDE launcher): a wider arena with more scenery. Other ROMs keep their original layout and show unmanaged edges. Close and reload content to apply. Save states require the same viewport.",
+    NULL,
+    NULL,
+    {
+        { "disabled", "Original 384x224 (4:3)" },
+        { "enabled", "Expanded 512x224 (16:9)" },
+        { NULL, NULL },
+    },
+    "disabled"
+};
+
 static struct retro_core_option_v2_definition var_fbneo_allow_patched_romsets = {
 	"fbneo-allow-patched-romsets",
 	"Allow patched romsets",
@@ -945,6 +960,8 @@ void set_environment()
 	var_fbneo_allow_patched_romsets.desc                   = RETRO_PATCHED_CAT_DESC;
 	var_fbneo_allow_patched_romsets.info                   = RETRO_PATCHED_CAT_INFO;
 	vars_systems.push_back(&var_fbneo_allow_patched_romsets);
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "xmvsf6pd"))
+		vars_systems.push_back(&var_xmv_wide);
 
 	var_fbneo_cpu_speed_adjust.desc                        = RETRO_CPUSPEED_CAT_DESC;
 	var_fbneo_cpu_speed_adjust.info                        = RETRO_CPUSPEED_CAT_INFO;

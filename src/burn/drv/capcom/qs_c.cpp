@@ -778,6 +778,12 @@ INT32 QscScan(INT32 nAction)
 	ba.szName	= szName;
 	BurnAcb(&ba);
 
+	if (CpsXmvSixActive()) {
+		SCAN_VAR(nDelta);
+		SCAN_VAR(nPos);
+		SCAN_VAR(interpolate_buffer);
+	}
+
 	return 0;
 }
 

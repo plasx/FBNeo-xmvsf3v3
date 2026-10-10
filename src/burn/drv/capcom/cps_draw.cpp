@@ -499,8 +499,12 @@ static void DoDraw(INT32 Recalc)
 {
 	CtvReady();								// Point to correct tile drawing functions
 
-	if (CpsRecalcPal || bCpsUpdatePalEveryFrame) GetPalette(0, 6);
-	if (Recalc || bCpsUpdatePalEveryFrame) CpsPalUpdate(CpsSavePal);		// recalc whole palette if needed
+    // Generic retro_unserialize requests a recalc after the driver restores.
+    // XMV6 restores the actual effective palette; rereading VRAM would lose it.
+    if (!CpsPalConsumeRestoredCache()) {
+        if (CpsRecalcPal || bCpsUpdatePalEveryFrame) GetPalette(0, 6);
+        if (Recalc || bCpsUpdatePalEveryFrame) CpsPalUpdate(CpsSavePal);
+    }		// recalc whole palette if needed
 
 	CpsClearScreen();
 

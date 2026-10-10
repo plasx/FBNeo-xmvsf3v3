@@ -1,4 +1,116 @@
 #include "cps.h"
+// XMV6 diagnostic virtual board. Included only in the generated isolated tree.
+#include "xmvsf_six_input.h"
+UINT8 CpsXmvSixButtons[XMV6_PLAYERS][13];
+static bool CpsXmvSixEnabled = false;
+static XmvSixInputState CpsXmvSixState;
+static UINT8 CpsXmvSixView[XMV6_WINDOW_BYTES];
+static UINT8 CpsXmvSixWorkRam[XMV6_WORK_RAM_BYTES];
+
+// portrait2: the driver states its capabilities once, before initialization.
+static UINT16 CpsXmvSixCapabilities = 3;
+void CpsXmvSixSetCapabilities(UINT16 value) { CpsXmvSixCapabilities = value; }
+
+static void CpsXmvSixRefreshView()
+{
+    for (unsigned i = 0; i < XMV6_WINDOW_BYTES; ++i)
+        CpsXmvSixView[i] = XmvSixReadByte(&CpsXmvSixState, i);
+    CpsXmvSixView[XMV6_REG_CAPABILITIES] = (UINT8)(CpsXmvSixCapabilities >> 8);
+    CpsXmvSixView[XMV6_REG_CAPABILITIES + 1] = (UINT8)CpsXmvSixCapabilities;
+}
+
+// The 68000 reads the ABI through these handlers, not through the frontend view.
+static UINT8 CpsXmvSixAbiByte(unsigned offset)
+{
+    if (offset == XMV6_REG_CAPABILITIES) return (UINT8)(CpsXmvSixCapabilities >> 8);
+    if (offset == XMV6_REG_CAPABILITIES + 1) return (UINT8)CpsXmvSixCapabilities;
+    return XmvSixReadByte(&CpsXmvSixState, offset);
+}
+
+static UINT16 CpsXmvSixAbiWord(unsigned offset)
+{
+    if (offset == XMV6_REG_CAPABILITIES) return CpsXmvSixCapabilities;
+    return XmvSixReadWord(&CpsXmvSixState, offset);
+}
+
+UINT8* CpsXmvSixMemoryView() { return CpsXmvSixEnabled ? CpsXmvSixView : NULL; }
+UINT8* CpsXmvSixRamView() { return CpsXmvSixEnabled ? CpsXmvSixWorkRam : NULL; }
+
+// wide2 (capability bit4, expanded view only): while the ROM keeps 'XS1X' at
+// virtual RAM $813FF8, scroll1 virtual columns 64..127 are read from $814000.
+const UINT8* XmvScroll1Extension()
+{
+    if (!CpsXmvSixEnabled || !XmvWideActive()) return NULL;
+    const UINT8* tag = CpsXmvSixWorkRam + 0x3ff8;
+    if (tag[0] != 'X' || tag[1] != 'S' || tag[2] != '1' || tag[3] != 'X') return NULL;
+    return CpsXmvSixWorkRam + 0x4000;
+}
+INT32 CpsXmvSixActive() { return CpsXmvSixEnabled ? 1 : 0; }
+
+void CpsXmvSixReset()
+{
+    XmvSixReset(&CpsXmvSixState);
+    memset(CpsXmvSixWorkRam, 0, sizeof(CpsXmvSixWorkRam));
+    CpsXmvSixRefreshView();
+}
+
+void CpsXmvSixEnable(INT32 enable)
+{
+    CpsXmvSixEnabled = enable != 0;
+    memset(CpsXmvSixButtons, 0, sizeof(CpsXmvSixButtons));
+    CpsXmvSixReset();
+}
+
+INT32 CpsXmvSixScan(INT32 action)
+{
+    if (CpsXmvSixEnabled && (action & ACB_MEMORY_RAM)) {
+        struct BurnArea ba;
+        memset(&ba, 0, sizeof(ba));
+        ba.Data = CpsXmvSixWorkRam;
+        ba.nLen = sizeof(CpsXmvSixWorkRam);
+        ba.nAddress = XMV6_WORK_RAM_BASE;
+        ba.szName = "XmvSixWorkRam";
+        BurnAcb(&ba);
+    }
+    if (CpsXmvSixEnabled && (action & ACB_DRIVER_DATA)) {
+        SCAN_VAR(CpsXmvSixState);
+        if (action & ACB_WRITE) {
+            if (CpsXmvSixState.abi != XMV6_VERSION || CpsXmvSixState.count > XMV6_DEPTH) {
+                CpsXmvSixReset();
+                return 1;
+            }
+            CpsXmvSixRefreshView();
+        }
+    }
+    return 0;
+}
+
+static void CpsXmvSixSample()
+{
+    if (!CpsXmvSixEnabled) return;
+    uint16_t raw[XMV6_PLAYERS] = {};
+    for (unsigned p = 0; p < XMV6_PLAYERS; ++p)
+        for (unsigned bit = 0; bit < 13; ++bit)
+            raw[p] |= (CpsXmvSixButtons[p][bit] & 1u) << bit;
+    XmvSixSample(&CpsXmvSixState, raw);
+    CpsXmvSixRefreshView();
+    // Legacy P1/P2 mirrors permit ordinary stock menus for diagnostic boot.
+    // No actor/tag/roster state is read and P3-P6 are never reassigned.
+    for (unsigned bit = 0; bit < 7; ++bit) {
+        CpsInp001[bit] = (CpsXmvSixState.held[0] >> bit) & 1;
+        CpsInp000[bit] = (CpsXmvSixState.held[1] >> bit) & 1;
+    }
+    for (unsigned p = 0; p < 2; ++p) {
+        uint16_t value = CpsXmvSixState.held[p];
+        CpsInp011[p * 4] = (value >> 8) & 1;
+        CpsInp011[p * 4 + 1] = (value >> 9) & 1;
+        CpsInp020[p] = (value >> 11) & 1;
+        CpsInp020[p + 4] = (value >> 12) & 1;
+    }
+    CpsInp011[2] = (CpsXmvSixState.held[0] >> 10) & 1;
+    CpsInp020[6] = (CpsXmvSixState.held[1] >> 10) & 1;
+}
+
 // CPS - Read/Write
 
 // Input bits
@@ -467,6 +579,10 @@ void CpsWritePort(const UINT32 ia, UINT8 d)
 
 UINT8 __fastcall CpsReadByte(UINT32 a)
 {
+	if (CpsXmvSixEnabled && a >= XMV6_BASE && a < XMV6_BASE + XMV6_WINDOW_BYTES)
+		return CpsXmvSixAbiByte(a - XMV6_BASE);
+	if (CpsXmvSixEnabled && a >= XMV6_WORK_RAM_BASE && a < XMV6_WORK_RAM_BASE + XMV6_WORK_RAM_BYTES)
+		return CpsXmvSixWorkRam[a - XMV6_WORK_RAM_BASE];
 	// Input ports mirrored between 0x800000 and 0x807fff
 	if ((a & 0xFF8000) == 0x800000) {
 		return CpsReadPort(a & 0x1FF);
@@ -495,6 +611,10 @@ UINT8 __fastcall CpsReadByte(UINT32 a)
 
 void __fastcall CpsWriteByte(UINT32 a,UINT8 d)
 {
+	if (CpsXmvSixEnabled && a >= XMV6_WORK_RAM_BASE && a < XMV6_WORK_RAM_BASE + XMV6_WORK_RAM_BYTES) {
+		CpsXmvSixWorkRam[a - XMV6_WORK_RAM_BASE] = d;
+		return;
+	}
 	// Output ports mirrored between 0x800000 and 0x807fff
 	if ((a & 0xFF8000) == 0x800000) {
 		CpsWritePort(a & 0x1FF, d);
@@ -543,6 +663,10 @@ void __fastcall CpsWriteByte(UINT32 a,UINT8 d)
 
 UINT16 __fastcall CpsReadWord(UINT32 a)
 {
+	if (CpsXmvSixEnabled && a >= XMV6_BASE && a < XMV6_BASE + XMV6_WINDOW_BYTES)
+		return CpsXmvSixAbiWord(a - XMV6_BASE);
+	if (CpsXmvSixEnabled && a >= XMV6_WORK_RAM_BASE && a < XMV6_WORK_RAM_BASE + XMV6_WORK_RAM_BYTES)
+		return XmvSixRamReadWord(CpsXmvSixWorkRam, a - XMV6_WORK_RAM_BASE);
 	if ((a & 0xFF8FFF) == 0x800100 + CpsMProt[3]) {
 		return (UINT16)((nCalc[0] * nCalc[1]) >> 16);
 	}
@@ -558,6 +682,10 @@ UINT16 __fastcall CpsReadWord(UINT32 a)
 
 void __fastcall CpsWriteWord(UINT32 a, UINT16 d)
 {
+	if (CpsXmvSixEnabled && a >= XMV6_WORK_RAM_BASE && a < XMV6_WORK_RAM_BASE + XMV6_WORK_RAM_BYTES) {
+		XmvSixRamWriteWord(CpsXmvSixWorkRam, a - XMV6_WORK_RAM_BASE, d);
+		return;
+	}
 	// ports mirrored between 0x800000 and 0x807fff
 	if ((a & 0xFF8FFF) == 0x800100 + CpsMProt[0])
 		nCalc[0] = d;
@@ -607,6 +735,7 @@ INT32 CpsRwExit()
 
 INT32 CpsRwGetInp()
 {
+	CpsXmvSixSample();
 	// Compile separate buttons into Inpxxx
 #define INP(nnn) \
   { INT32 i = 0; Inp##nnn = 0; \
