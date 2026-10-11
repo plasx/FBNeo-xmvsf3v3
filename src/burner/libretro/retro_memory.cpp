@@ -1,7 +1,9 @@
 #include "retro_common.h"
 #include "retro_memory.h"
+#ifdef BUILD_CAPCOM
 extern UINT8* CpsXmvSixMemoryView();
 extern UINT8* CpsXmvSixRamView();
+#endif
 
 // Cheevos support
 static void* pMainRamData = NULL;
@@ -189,6 +191,7 @@ void CheevosInit()
 		HandleMessage(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p, size is %zu\n", pMainRamData, nMainRamSize);
 	}
 
+#ifdef BUILD_CAPCOM
     if (CpsXmvSixMemoryView()) {
         struct retro_memory_descriptor* desc = &sMemoryDescriptors[nMemoryCount++];
         desc->flags = RETRO_MEMDESC_CONST | RETRO_MEMDESC_BIGENDIAN;
@@ -204,6 +207,7 @@ void CheevosInit()
         desc->len = 0x10000;
         desc->addrspace = "XMV6RAM";
     }
+#endif
 	if (bMemoryMapFound) {
 		struct retro_memory_map sMemoryMap = {};
 		sMemoryMap.descriptors = sMemoryDescriptors;

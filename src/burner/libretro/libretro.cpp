@@ -38,7 +38,14 @@
 
 #ifdef SUBSET
 #undef APP_TITLE
+#ifdef XMVSF3V3_CORE
 #define APP_TITLE "FinalBurn Neo (XMvsSF 3v3 + DHC)"
+#else
+#define APP_TITLE "FinalBurn Neo (" SUBSET " subset)"
+#endif
+#endif
+
+#ifdef BUILD_CAPCOM
 extern void XmvWideRequest(INT32);
 #endif
 
@@ -2164,6 +2171,7 @@ static bool retro_load_game_common()
 		// Libretro doesn't want the refresh rate to be limited to 60hz
 		bSpeedLimit60hz = false;
 
+#ifdef BUILD_CAPCOM
         // Reload-only geometry: allocate every CPS/video buffer with the final size.
         // In-game variable updates never change XmvWideRequested or live geometry.
         struct retro_variable xmvWide = { "fbneo-xmvsf-expanded-view", NULL };
@@ -2171,6 +2179,7 @@ static bool retro_load_game_common()
             environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &xmvWide) &&
             xmvWide.value && !strcmp(xmvWide.value, "enabled");
         XmvWideRequest(xmvWideEnabled ? 1 : 0);
+#endif
 
 		// Initialize game driver
 		if(BurnDrvInit() == 0)
