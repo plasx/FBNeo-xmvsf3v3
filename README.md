@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **Unofficial fork, not supported by the FBNeo team.** This repository is a fork of
+> [libretro/FBNeo](https://github.com/libretro/FBNeo), FinalBurn Neo's libretro port. Its
+> `xmvsf3v3` branch adds one CPS-2 set for the XMvsSF 3v3 + DHC fan modification (see
+> [XMVSF3V3.md](XMVSF3V3.md)). Please don't report problems with this fork, or with anything
+> built from it, to the FinalBurn Neo team. Everything below is FinalBurn Neo's own README.
+
 # FinalBurn Neo
 Official Forum: https://neo-source.com
 
