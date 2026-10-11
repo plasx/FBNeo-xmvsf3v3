@@ -12851,8 +12851,8 @@ static INT32 XmvSixInit() {
     BurnDrvSetAspect(XmvWideRequested ? 16 : 4, XmvWideRequested ? 9 : 3);
     // bit0 work RAM, bit1 portrait1, bit2 portrait2 six colours, bit3 expanded view,
     // bit4 (expanded view only) 1024-pixel scroll1 map extension, bit5 portrait3
-    // twelve colours.
-    CpsXmvSixSetCapabilities((XmvWideRequested ? 31 : 7) | 0x20);
+    // twelve colours, bit6 portrait4 eighteen colours.
+    CpsXmvSixSetCapabilities((XmvWideRequested ? 31 : 7) | 0x60);
     CpsXmvSixEnable(1);
     INT32 rc = Cps2Init();
     if (rc) CpsXmvSixEnable(0);

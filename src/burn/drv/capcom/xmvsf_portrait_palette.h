@@ -1,5 +1,5 @@
-// Stateless portrait palette decoder (portrait1 + six colours + twelve colours
-// + wide HUD geometry). Input ROM bytes retain the normal FBNeo CPS2 chip order (each
+// Stateless portrait palette decoder (portrait1 + six, twelve and eighteen
+// colours + wide HUD geometry). Input ROM bytes retain the normal FBNeo CPS2 chip order (each
 // 68000 word has its low byte first). No native palette, emulated RAM, raster
 // state or object memory is modified.
 #ifndef XMV_PORTRAIT_PALETTE_H
@@ -17,6 +17,7 @@ static inline uint16_t XmvPortraitWord(const uint8_t* rom, size_t at)
 //   $12..$17 portrait2 colour 0..5 (ROM saw capability bit2)
 //   $06..$0B portrait3 colour 6..11, the marker is the colour (ROM saw bit5;
 //            the core decodes them from the packed X3CZ table)
+//   $0C..$11 portrait4 colour 12..17, the marker is the colour (ROM saw bit6)
 // Geometry: normal view left raw X $E040 / right $E1A0; the expanded 512-wide
 // view (capability bit3) left $E000 / right $E1E0. Raw Y is one of the three
 // compact HUD rows. Left objects are unflipped 2x1 ($0100), right ones are
@@ -36,7 +37,7 @@ static inline bool XmvPortraitObject2(unsigned tile, unsigned rawX, unsigned raw
     }
     if (marker == 0x1c || marker == 0x1d) { *color = marker - 0x1c; return true; }
     if (marker >= 0x12 && marker <= 0x17) { *color = marker - 0x12; return true; }
-    if (marker >= 0x06 && marker <= 0x0b) { *color = marker; return true; }
+    if (marker >= 0x06 && marker <= 0x11) { *color = marker; return true; }
     return false;
 }
 
@@ -46,7 +47,7 @@ static inline unsigned XmvPortraitByte(const uint8_t* rom, size_t at)
     return rom[at ^ 1];
 }
 
-// Row 0 of colour 2..11 from the packed X3CZ table at $335000
+// Row 0 of colour 2..17 from the packed X3CZ table at $335000
 // (engine/colors_pack.py): native costume 1's row 0, then the colour's row-0
 // patch (optionally starting from costume 0's row), 12-bit colours packed two
 // per three bytes. No variant ($FFFF) leaves the costume-1 row. `pointer` is
@@ -100,10 +101,11 @@ static inline bool XmvPortraitPacked(const uint8_t* rom, size_t romBytes, unsign
 
 // Returns 16 RGB444 colours in the same pen order as CpsPalUpdate (pen^15).
 // A false result never touches output. Colours 0/1 read the pinned Euro DATA
-// directory $1145A8 (+$60 for costume 1). Colours 2..11 read the ROM's variant
-// table at $335000: the packed X3CZ table (candidate49 onward), or for
-// colours 2..5 the older X3C6 table (header: 'X3C6', version 1, 19
-// identities, 4 variants, 96-byte stride, data at +$10). Row 0 of the block.
+// directory $1145A8 (+$60 for costume 1). Colours 2..17 read the ROM's variant
+// table at $335000: the packed X3CZ table (candidate49 onward; its header says
+// how many colours it holds), or for colours 2..5 the older X3C6 table
+// (header: 'X3C6', version 1, 19 identities, 4 variants, 96-byte stride, data
+// at +$10). Row 0 of the block.
 static inline bool XmvPortraitColors2(bool diagnostic, const uint8_t* rom,
     size_t romBytes, unsigned tile, unsigned color, uint16_t output[16])
 {
@@ -117,7 +119,7 @@ static inline bool XmvPortraitColors2(bool diagnostic, const uint8_t* rom,
         0x115a1c,0x115b9c,0x115c5c,0x115d5c,0x115fdc,
         0x11609c,0x11621c,0x11639c,0x1164bc
     };
-    if (!diagnostic || !rom || !output || romBytes < 0x338000 || color > 11) return false;
+    if (!diagnostic || !rom || !output || romBytes < 0x338000 || color > 17) return false;
     if (tile < 0x1ff00 || tile > 0x1ff22 || (tile & 1)) return false;
     unsigned character = characters[(tile - 0x1ff00) / 2];
     unsigned directory = 0x1145a8 + character * 2;
