@@ -13,7 +13,7 @@ the release page instead: https://www.morphus56k.com/blog/xmvsf-three-on-three
 
 - `xmvsf6pd`, a clone of `xmvsf` (Europe 961004) for two or six players: six independent
   controllers, and the memory window the three-member teams use.
-- HUD portrait colours for the six colour variants.
+- HUD portrait colours for all eighteen colours, decoded from the game's packed colour table.
 - An optional 512x224 (16:9) view, core option `fbneo-xmvsf-expanded-view`, applied when
   content is loaded.
 - `src/burner/libretro/Makefile.xmv6diag`, a build with only the CPS-1 and CPS-2 drivers.
@@ -32,12 +32,15 @@ DHC)". `REGEN_HEADERS=1` (needs perl) regenerates `src/dep/generated/driverlist.
 so they show as modified after this build. FinalBurn Neo's usual build
 (`make -C src/burner/libretro`) still works.
 
-## Branches and tags
+## Branches, tags and releases
 
+- `xmvsf3v3` (the default branch): the changes, with FinalBurn Neo's master merged in.
 - `master`: libretro/FBNeo's master, unchanged.
-- `xmvsf3v3`: the changes, with FinalBurn Neo's master merged in.
-- `xmvsf3v3-v1.0.0`: the exact source of the cores in the XMvsSF 3v3 + DHC v1.0.0 and
-  v1.0.0-r2 packages (libretro/FBNeo `aceeebed9e7e` plus one commit).
+- `xmvsf3v3-v1.1.0`: the exact source of the cores in the XMvsSF 3v3 + DHC v1.1.0 packages.
+  Its [release](https://github.com/plasx/FBNeo-xmvsf3v3/releases/tag/xmvsf3v3-v1.1.0) has the
+  source archives.
+- `xmvsf3v3-v1.0.0`: the source of the cores in the v1.0.0 and v1.0.0-r2 packages, which are
+  withdrawn.
 
 ## No ROMs
 
