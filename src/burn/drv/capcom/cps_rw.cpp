@@ -845,7 +845,9 @@ INT32 CpsRwGetInp()
 		}
 	}
 
-	if (nMaxPlayers > 2) {
+	// xmvsf6pd: players 3-6 never reach the stock ports (Inp011 is P1/P2's kicks there), and
+	// CpsXmvSixSample() has already cleaned every player's opposite directions
+	if (nMaxPlayers > 2 && !CpsXmvSixEnabled) {
 		if (Cps == 2) {
 			clear_opposite.check(2, Inp011, 0x08, 0x04, 0x02, 0x01, nSocd[2]);
 			if (nMaxPlayers == 4) {

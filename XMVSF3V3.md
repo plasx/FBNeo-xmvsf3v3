@@ -36,9 +36,15 @@ so they show as modified after this build. FinalBurn Neo's usual build
 
 - `xmvsf3v3` (the default branch): the changes, with FinalBurn Neo's master merged in.
 - `master`: libretro/FBNeo's master, unchanged.
-- `xmvsf3v3-v1.1.0`: the exact source of the cores in the XMvsSF 3v3 + DHC v1.1.0 packages.
-  Its [release](https://github.com/plasx/FBNeo-xmvsf3v3/releases/tag/xmvsf3v3-v1.1.0) has the
+- `xmvsf3v3-v1.1.1`: the exact source of the cores in the XMvsSF 3v3 + DHC v1.1.1 packages.
+  Its [release](https://github.com/plasx/FBNeo-xmvsf3v3/releases/tag/xmvsf3v3-v1.1.1) has the
   source archives.
+- `xmvsf3v3-v1.1.0`: the source of the cores in the v1.1.0 packages, which v1.1.1 replaces. With
+  RetroArch's SOCD option on, that core let FinalBurn Neo's player-3 stick cleaning act on the
+  byte that holds P1's and P2's kicks, so P1's LK and MK pressed on the same frame didn't both
+  reach the two-player game. Its
+  [release](https://github.com/plasx/FBNeo-xmvsf3v3/releases/tag/xmvsf3v3-v1.1.0) has the source
+  archives.
 - `xmvsf3v3-v1.0.0`: the source of the cores in the v1.0.0 and v1.0.0-r2 packages, which are
   withdrawn.
 
